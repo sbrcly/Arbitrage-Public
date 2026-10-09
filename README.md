@@ -1,44 +1,27 @@
-# This is an internal Sports Trading tool for Caesars Sportsbook.
+# Arbitrage detector
 
-## What is arbitrage betting?
-Arbitrage betting (otherwise known as ‘arb betting’) is an increasingly popular sports betting strategy where the bettor covers all possible outcomes. Regardless of the outcome of a match, you can guarantee a profit.
+An internal tool I built for the Caesars Sportsbook trading floor in Las Vegas, in the evenings while I was still a trader. This repository is a write-up; the code belongs to the sportsbook. Case study: [scottbarclay.dev/work/arbitrage-detector](https://scottbarclay.dev/work/arbitrage-detector).
 
-If you get it right, it essentially means that your bet cannot lose. 
+## What an arbitrage is
 
-## How does the tool work?
-This tool uses a couple different API's to pull in Live betting data from Caesars Sportsbook, as well as approximately 50 other sportsbooks.
+A gap between two books. If Caesars prices one side of a game high enough and a competitor prices the other side high enough, a bettor can back both outcomes and profit whichever way the game goes. The bettor's gain is the book's loss, and sharp bettors run software that finds these gaps within seconds. A trader who sees the gap first can move the line and close it.
 
-It then compares our odds (Caesars) for every different bet that we offer and compares it against the equivalent market of the other sportsbooks.
+## What the tool did
 
-If our odds compared against the odds of our competitor offer an arbitrage opportunity, that bet and the details around it will be shown in the table.
+Every minute it compared every bet Caesars offered against the same bet at about fifty other sportsbooks and flagged any pair of prices a bettor could take both sides of. Each flag became a row on every trader's screen: the game, the market, our price, the competitor's price, and the margin. The trader moved the line; the row disappeared on the next cycle.
 
-The table automatically updates every minute.
+## How it worked
 
-## How is the code structured?
+- The server pulled live odds from Caesars and from the other books through their APIs (Axios), paired each of our markets with the equivalent market elsewhere, and computed whether both sides together came out ahead.
+- Results were pushed to every open screen over Socket.io on a one-minute cycle.
+- The hard part was the pairing, not the arithmetic: fifty books spell team names, periods, and lines differently, and a false match is worse than a missed one because it sends a trader to move a line that was fine.
 
-### Server Side
-I use Axios on the server side to pull in the data from the appropriate API's.
+Stack: Node, Socket.io, MySQL, Google Cloud.
 
-Socket.io will then emit that data to the client side of all open sockets. This is sent on a 1 minute interval.
+## Screenshots
 
-### Client Side
-The client side JavaScript will then update the table with the new data.
+![Flagged opportunities](https://user-images.githubusercontent.com/93163082/169880288-3cb09e61-2a11-4940-8607-8a3625321c0f.png)
 
+![The table](https://user-images.githubusercontent.com/93163082/169875822-77eef13f-27ed-45f2-af33-0599492534ea.png)
 
-
-Below are a couple screenshots of the application. Thank you for your time!
-
-
-
-![with_arbs3](https://user-images.githubusercontent.com/93163082/169880288-3cb09e61-2a11-4940-8607-8a3625321c0f.png)
-
-
-![with_arbs](https://user-images.githubusercontent.com/93163082/169875822-77eef13f-27ed-45f2-af33-0599492534ea.png)
-
-
-![checking](https://user-images.githubusercontent.com/93163082/169905553-b0518a34-114a-4ee4-8841-b170cebd7338.gif)
-
-
-
-
-
+![Checking a flag](https://user-images.githubusercontent.com/93163082/169905553-b0518a34-114a-4ee4-8841-b170cebd7338.gif)
